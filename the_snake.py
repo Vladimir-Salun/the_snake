@@ -14,6 +14,7 @@ DOWN = (0, 1)
 LEFT = (-1, 0)
 RIGHT = (1, 0)
 
+DEFAULT_COLOR = (100, 100, 100)
 # Цвет фона - черный:
 BOARD_BACKGROUND_COLOR = (0, 0, 0)
 
@@ -40,20 +41,70 @@ clock = pygame.time.Clock()
 
 
 # Тут опишите все классы игры.
-...
+class GameObject:
+    def __init__(self):
+        self.position = (0, 0)
+        self.body_color = DEFAULT_COLOR
+
+    def draw(self, surface):
+        pass
+
+
+class Snake(GameObject):
+
+    def __init__(self):
+        super().__init__()
+        self.length = 1
+        self.positions = [(GRID_WIDTH // 2, GRID_HEIGHT // 2)]
+        self.direction = choice([UP, DOWN, LEFT, RIGHT])
+        self.next_direction = None
+        self.last = None
+        self.body_color = SNAKE_COLOR
+
+    def update_direction(self):
+        if self.next_direction:
+            self.direction = self.next_direction
+            self.next_direction = None
+
+
+class Apple(GameObject):
+
+    def __init__(self):
+        super().__init__()
+        self.body_color = APPLE_COLOR
+        self.randomize_position()
+
+    def randomize_position(self):
+        self.position = (
+            randint(0, GRID_WIDTH - 1) * GRID_SIZE,
+            randint(0, GRID_HEIGHT - 1) * GRID_SIZE
+        )
+
+    def draw(self):
+        rect = pygame.Rect(self.position, (GRID_SIZE, GRID_SIZE))
+        pygame.draw.rect(screen, self.body_color, rect)
+        pygame.draw.rect(screen, BORDER_COLOR, rect, 1)
 
 
 def main():
     # Инициализация PyGame:
     pygame.init()
     # Тут нужно создать экземпляры классов.
-    ...
+    apple = Apple()
 
-    # while True:
-    #     clock.tick(SPEED)
+    apple.draw()
+    while True:
+        clock.tick(SPEED)
 
-        # Тут опишите основную логику игры.
-        # ...
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                return
+
+        pygame.display.update()
+
+    # Тут опишите основную логику игры.
+    # ...
 
 
 if __name__ == '__main__':
