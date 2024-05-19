@@ -183,20 +183,12 @@ def main():
     # Инициализация PyGame
     pygame.init()
 
-    # Создание экрана
-    screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
-
     # Создание экземпляров классов
     snake = Snake()
     apple = Apple()
 
-    # Создание объекта Clock
-    clock = pygame.time.Clock()
-    running = True
-
-    while running:
+    while True:
         clock.tick(SPEED)
-
         handle_keys(snake)
         snake.update_direction()
         snake.move(apple)
