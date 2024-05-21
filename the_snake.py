@@ -64,7 +64,7 @@ class GameObject:
 
 
 class Snake(GameObject):
-    """Дочерний класс,описывающий змейку и её поведение."""
+    """Дочерний класс, описывающий змейку и её поведение."""
 
     def draw(self):
         """Отрисовывает змейку на экране, затирая след."""
@@ -82,6 +82,17 @@ class Snake(GameObject):
         if self.last:
             last_rect = pg.Rect(self.last, (GRID_SIZE, GRID_SIZE))
             pg.draw.rect(screen, BOARD_BACKGROUND_COLOR, last_rect)
+
+
+class Apple(GameObject):
+    """Дочерний класс, описывающий яблоко и действия с ним."""
+
+    # Метод draw класса Apple
+    def draw(self):
+        """Отрисовывает яблоко на игровой поверхности."""
+        rect = pg.Rect(self.position, (GRID_SIZE, GRID_SIZE))
+        pg.draw.rect(screen, self.body_color, rect)
+        pg.draw.rect(screen, BORDER_COLOR, rect, 1)
 
 
 # Тут опишите все классы игры.
