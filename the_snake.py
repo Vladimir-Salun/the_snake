@@ -1,5 +1,6 @@
-from random import choice, randint
-from typing import List, Optional, Tuple
+"""Учебный проект Змейка."""
+# from random import choice, randint
+from typing import Tuple, List, Optional
 from abc import abstractmethod
 
 import pygame as pg
@@ -34,7 +35,7 @@ APPLE_COLOR: COLOR = (255, 0, 0)
 SNAKE_COLOR: COLOR = (0, 255, 0)
 
 # Скорость движения змейки:
-SPEED: int = 20
+SPEED: int = 10
 
 # Настройка игрового окна:
 screen = pg.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT), 0, 32)
@@ -66,10 +67,46 @@ class GameObject:
 class Snake(GameObject):
     """Дочерний класс, описывающий змейку и её поведение."""
 
+    def __init__(self) -> None:
+        """Инициализация змейки."""
+        super().__init__((SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2), SNAKE_COLOR)
+        self.length: int = 1
+        self.speed: int = SPEED
+        self.positions: List[COORDINATE] = [self.position]
+        self.direction: COORDINATE = RIGHT
+        self.next_direction: Optional[COORDINATE] = None
+        self.last: Optional[COORDINATE] = None
+
+    def update_direction(self):
+        """Обновляет направление движения змейки."""
+        if self.next_direction:
+            self.direction = self.next_direction
+            self.next_direction = None
+
+    def move(self) -> COORDINATE:
+        """Обновляет позицию змейки."""
+        self.update_direction()
+        x, y = self.position
+        dx, dy = self.direction
+        new_x = (x + dx * GRID_SIZE) % SCREEN_WIDTH
+        new_y = (y + dy * GRID_SIZE) % SCREEN_HEIGHT
+        next_position = (new_x, new_y)
+        return next_position
+
+    def new_position_snake(self, next_position: COORDINATE) -> None:
+        """Устанавливает новую позицию в змейку."""
+        self.position = next_position
+        self.positions.insert(0, self.position)
+
+    def del_last(self) -> None:
+        """Удаление последнего элемнта из списка positions."""
+        if len(self.positions) > self.length:
+            self.last = self.positions.pop()
+
     def draw(self):
         """Отрисовывает змейку на экране, затирая след."""
         for position in self.positions[:-1]:
-            rect = (pg.Rect(position, (GRID_SIZE, GRID_SIZE)))
+            rect = pg.Rect(position, (GRID_SIZE, GRID_SIZE))
             pg.draw.rect(screen, self.body_color, rect)
             pg.draw.rect(screen, BORDER_COLOR, rect, 1)
 
@@ -84,52 +121,54 @@ class Snake(GameObject):
             pg.draw.rect(screen, BOARD_BACKGROUND_COLOR, last_rect)
 
 
-class Apple(GameObject):
-    """Дочерний класс, описывающий яблоко и действия с ним."""
+# class Apple(GameObject):
+#     """Дочерний класс, описывающий яблоко и действия с ним."""
 
-    # Метод draw класса Apple
-    def draw(self):
-        """Отрисовывает яблоко на игровой поверхности."""
-        rect = pg.Rect(self.position, (GRID_SIZE, GRID_SIZE))
-        pg.draw.rect(screen, self.body_color, rect)
-        pg.draw.rect(screen, BORDER_COLOR, rect, 1)
+#     # Метод draw класса Apple
+#     def draw(self):
+#         """Отрисовывает яблоко на игровой поверхности."""
+#         rect = pg.Rect(self.position, (GRID_SIZE, GRID_SIZE))
+#         pg.draw.rect(screen, self.body_color, rect)
+#         pg.draw.rect(screen, BORDER_COLOR, rect, 1)
 
 
 # Тут опишите все классы игры.
-def handle_keys():
+def handle_keys(game_object) -> bool:
     """Обработка действий пользователя."""
     for event in pg.event.get():
         if event.type == pg.QUIT:
             return False
-    return True
+        elif event.type == pg.KEYDOWN:
+            if event.key == pg.K_UP and game_object.direction != DOWN:
+                game_object.next_direction = UP
+            elif event.key == pg.K_DOWN and game_object.direction != UP:
+                game_object.next_direction = DOWN
+            elif event.key == pg.K_LEFT and game_object.direction != RIGHT:
+                game_object.next_direction = LEFT
+            elif event.key == pg.K_RIGHT and game_object.direction != LEFT:
+                game_object.next_direction = RIGHT
 
-    # pg.quit()
-    # raise SystemExit
-    # elif event.type == pg.KEYDOWN:
-    #     if event.key == pg.K_UP and game_object.direction != DOWN:
-    #         game_object.next_direction = UP
-    #     elif event.key == pg.K_DOWN and game_object.direction != UP:
-    #         game_object.next_direction = DOWN
-    #     elif event.key == pg.K_LEFT and game_object.direction != RIGHT:
-    #         game_object.next_direction = LEFT
-    #     elif event.key == pg.K_RIGHT and game_object.direction != LEFT:
-    #         game_object.next_direction = RIGHT
+    return True
 
 
 def main() -> None:
     """Основной цикл игры."""
     # Инициализация PyGame:
     pg.init()
-    # Тут нужно создать экземпляры классов.
+    # Экземпляры классов.
+    snake = Snake()
     running = True
+    # Основную логику игры.
     while running:
-        clock.tick(SPEED)
+        clock.tick(snake.speed)
         screen.fill(BOARD_BACKGROUND_COLOR)
-        running = handle_keys()
+        running = handle_keys(snake)
+        next_position = snake.move()
+        snake.new_position_snake(next_position)
+        snake.del_last()
+        snake.draw()
         pg.display.update()
     pg.quit()
-
-    # Тут опишите основную логику игры.
 
 
 if __name__ == '__main__':
@@ -170,9 +209,11 @@ if __name__ == '__main__':
 #                 game_object.next_direction = UP
 #             elif event.key == pygame.K_DOWN and game_object.direction != UP:
 #                 game_object.next_direction = DOWN
-#             elif event.key == pygame.K_LEFT and game_object.direction != RIGHT:
+#             elif event.key == pygame.K_LEFT and
+#                            game_object.direction != RIGHT:
 #                 game_object.next_direction = LEFT
-#             elif event.key == pygame.K_RIGHT and game_object.direction != LEFT:
+#             elif event.key == pygame.K_RIGHT
+#                           and game_object.direction != LEFT:
 #                 game_object.next_direction = RIGHT
 
 # Метод обновления направления после нажатия на кнопку
