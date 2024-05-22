@@ -95,7 +95,7 @@ class Snake(GameObject):
             self.grow()
         return next_position
 
-    def new_position_snake(self, next_position: COORDINATE) -> None:
+    def get_head_position(self, next_position: COORDINATE) -> None:
         """Устанавливает новую позицию в змейку."""
         self.positions.insert(0, next_position)
         self.position = next_position
@@ -108,7 +108,7 @@ class Snake(GameObject):
         """Увеличивает длину змейки."""
         self.length += 1
 
-    def check_collision(self) -> bool:
+    def reset(self) -> bool:
         """Проверяет, столкнулась ли змейка со своим телом."""
         head = self.positions[0]
         for segment in self.positions[1:]:
@@ -196,11 +196,11 @@ def main() -> None:
         screen.fill(BOARD_BACKGROUND_COLOR)
         running = handle_keys(snake)
         next_position = snake.move(apple.position)
-        if snake.check_collision():
+        if snake.reset():
             snake = Snake()
             apple = Apple(snake.positions)
         elif next_position != apple.position:
-            snake.new_position_snake(next_position)
+            snake.get_head_position(next_position)
 
         # Обновление позиции яблока, если змейка съела его
         if next_position == apple.position:
