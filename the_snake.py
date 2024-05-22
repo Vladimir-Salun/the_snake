@@ -1,5 +1,5 @@
 """Учебный проект Змейка."""
-# from random import choice, randint
+from random import randint
 from typing import Tuple, List, Optional
 from abc import abstractmethod
 
@@ -83,7 +83,7 @@ class Snake(GameObject):
             self.direction = self.next_direction
             self.next_direction = None
 
-    def move(self) -> COORDINATE:
+    def move(self, apple_position) -> COORDINATE:
         """Обновляет позицию змейки."""
         self.update_direction()
         x, y = self.position
@@ -91,17 +91,30 @@ class Snake(GameObject):
         new_x = (x + dx * GRID_SIZE) % SCREEN_WIDTH
         new_y = (y + dy * GRID_SIZE) % SCREEN_HEIGHT
         next_position = (new_x, new_y)
+        if next_position == apple_position:
+            self.grow()
         return next_position
 
     def new_position_snake(self, next_position: COORDINATE) -> None:
         """Устанавливает новую позицию в змейку."""
+        self.positions.insert(0, next_position)
         self.position = next_position
-        self.positions.insert(0, self.position)
-
-    def del_last(self) -> None:
-        """Удаление последнего элемнта из списка positions."""
         if len(self.positions) > self.length:
             self.last = self.positions.pop()
+        else:
+            self.last = None
+
+    def grow(self) -> None:
+        """Увеличивает длину змейки."""
+        self.length += 1
+
+    def check_collision(self) -> bool:
+        """Проверяет, столкнулась ли змейка со своим телом."""
+        head = self.positions[0]
+        for segment in self.positions[1:]:
+            if head == segment:
+                return True
+        return False
 
     def draw(self):
         """Отрисовывает змейку на экране, затирая след."""
@@ -121,18 +134,36 @@ class Snake(GameObject):
             pg.draw.rect(screen, BOARD_BACKGROUND_COLOR, last_rect)
 
 
-# class Apple(GameObject):
-#     """Дочерний класс, описывающий яблоко и действия с ним."""
+class Apple(GameObject):
+    """Дочерний класс, описывающий яблоко и действия с ним."""
 
-#     # Метод draw класса Apple
-#     def draw(self):
-#         """Отрисовывает яблоко на игровой поверхности."""
-#         rect = pg.Rect(self.position, (GRID_SIZE, GRID_SIZE))
-#         pg.draw.rect(screen, self.body_color, rect)
-#         pg.draw.rect(screen, BORDER_COLOR, rect, 1)
+    def __init__(self, snake_position: List[COORDINATE] = [(0, 0)]) -> None:
+        """Инициализация яблока."""
+        super().__init__(position=(0, 0), body_color=APPLE_COLOR)
+        self.position = self.randomize_position(snake_position)
+
+    def randomize_position(
+            self, snake_positions: List[COORDINATE]
+    ) -> COORDINATE:
+        """Устанавливает случайное положение яблока."""
+        while True:
+            posit_x = randint(0, GRID_WIDTH - 1)
+            posit_y = randint(0, GRID_HEIGHT - 1)
+            new_posit = (posit_x * GRID_SIZE, posit_y * GRID_SIZE)
+            if new_posit not in snake_positions:
+                return new_posit
+
+    def new_position(self, snake_positions: List[COORDINATE]) -> None:
+        """Генерирует новую позицию для яблока."""
+        self.position = self.randomize_position(snake_positions)
+
+    def draw(self) -> None:
+        """Отрисовывает яблоко на игровой поверхности."""
+        rect = pg.Rect(self.position, (GRID_SIZE, GRID_SIZE))
+        pg.draw.rect(screen, self.body_color, rect)
+        pg.draw.rect(screen, BORDER_COLOR, rect, 1)
 
 
-# Тут опишите все классы игры.
 def handle_keys(game_object) -> bool:
     """Обработка действий пользователя."""
     for event in pg.event.get():
@@ -157,16 +188,26 @@ def main() -> None:
     pg.init()
     # Экземпляры классов.
     snake = Snake()
+    apple = Apple(snake.positions)
     running = True
     # Основную логику игры.
     while running:
         clock.tick(snake.speed)
         screen.fill(BOARD_BACKGROUND_COLOR)
         running = handle_keys(snake)
-        next_position = snake.move()
-        snake.new_position_snake(next_position)
-        snake.del_last()
+        next_position = snake.move(apple.position)
+        if snake.check_collision():
+            snake = Snake()
+            apple = Apple(snake.positions)
+        elif next_position != apple.position:
+            snake.new_position_snake(next_position)
+
+        # Обновление позиции яблока, если змейка съела его
+        if next_position == apple.position:
+            snake.grow()
+            apple.new_position(snake.positions)
         snake.draw()
+        apple.draw()
         pg.display.update()
     pg.quit()
 
