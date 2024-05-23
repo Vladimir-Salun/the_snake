@@ -17,6 +17,7 @@ RIGHT = (1, 0)
 
 # Цвет объекта по умолчанию
 DEFAULT_COLOR = (255, 255, 255)
+
 # Цвет фона - черный:
 BOARD_BACKGROUND_COLOR = (0, 0, 0)
 
@@ -30,7 +31,7 @@ APPLE_COLOR = (255, 0, 0)
 SNAKE_COLOR = (0, 255, 0)
 
 # Скорость движения змейки:
-SPEED: int = 10
+SPEED: int = 20
 
 # Настройка игрового окна:
 screen = pg.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT), 0, 32)
@@ -45,7 +46,7 @@ clock = pg.time.Clock()
 class GameObject:
     """Базовый класс."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Инициализация игрового объекта."""
         self.position = CENTER_POSITION
         self.body_color = DEFAULT_COLOR
@@ -79,7 +80,7 @@ class Snake(GameObject):
             self.direction = self.next_direction
             self.next_direction = None
 
-    def get_head_position(self) -> tuple:
+    def get_head_position(self) -> tuple[int, int]:
         """Устанавливает новую позицию в змейку."""
         return self.positions[0]
 
@@ -96,7 +97,7 @@ class Snake(GameObject):
         if len(self.positions) > self.length:
             self.positions.pop()
 
-    def reset(self):
+    def reset(self) -> None:
         """Перезапуск игры."""
         self.length = 1
         self.speed = SPEED
@@ -106,7 +107,7 @@ class Snake(GameObject):
         self.last = None
         self.body_color = SNAKE_COLOR
 
-    def draw(self):
+    def draw(self) -> None:
         """Отрисовывает змейку на экране, затирая след."""
         for position in self.positions:
             self.draw_cell(position, self.body_color)
@@ -115,14 +116,14 @@ class Snake(GameObject):
 class Apple(GameObject):
     """Дочерний класс, описывающий яблоко и действия с ним."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Инициализация яблока."""
         self.position = self.randomize_position()
         self.body_color = APPLE_COLOR
 
     def randomize_position(
             self, random_positions=CENTER_POSITION
-    ):
+    ) -> tuple[int, int]:
         """Устанавливает случайное положение яблока."""
         while True:
             posit_x = randint(0, SCREEN_WIDTH // GRID_SIZE - 1) * GRID_SIZE
@@ -134,12 +135,12 @@ class Apple(GameObject):
             else:
                 return new_posit
 
-    def draw(self):
+    def draw(self) -> None:
         """Отрисовка яблоко."""
         self.draw_cell(self.position, self.body_color)
 
 
-def handle_keys(game_object):
+def handle_keys(game_object) -> None:
     """Обработка действий пользователя."""
     for event in pg.event.get():
         if event.type == pg.QUIT:
@@ -173,9 +174,11 @@ def main() -> None:
         apple.draw()
         snake.move()
         snake.update_direction()
+
         if snake.get_head_position() == apple.position:
             snake.length += 1
             apple.position = apple.randomize_position(snake.positions)
+
         pg.display.update()
 
 
