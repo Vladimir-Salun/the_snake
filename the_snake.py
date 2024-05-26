@@ -77,7 +77,7 @@ class Snake(GameObject):
 
     def __init__(self) -> None:
         """Инициализация змейки."""
-        super().__init__(body_color=SNAKE_COLOR)
+        super().__init__(position=(0, 0), body_color=SNAKE_COLOR)
         self.reset()
 
     def update_direction(self):
@@ -126,12 +126,13 @@ class Apple(GameObject):
 
     def __init__(self, snake_positions=None):
         """Инициализация яблока."""
-        super().__init__(body_color=APPLE_COLOR)
+        super().__init__(position=(0, 0), body_color=APPLE_COLOR)
         self.randomize_position(snake_positions)
 
     def randomize_position(self, snake_positions):
         """Устанавливает случайное положение яблока."""
-        self.position = snake_positions[0] or CENTER_POSITION
+        snake_positions = snake_positions or [CENTER_POSITION]
+        self.position = snake_positions[0]
         while self.position in snake_positions:
             posit_x = randint(0, SCREEN_WIDTH // GRID_SIZE - 1) * GRID_SIZE
             posit_y = randint(0, SCREEN_HEIGHT // GRID_SIZE - 1) * GRID_SIZE
