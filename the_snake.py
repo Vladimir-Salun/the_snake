@@ -16,7 +16,8 @@ UP: tuple = (0, -1)
 DOWN: tuple = (0, 1)
 LEFT: tuple = (-1, 0)
 RIGHT: tuple = (1, 0)
-
+# Максимальная длина змейки
+MAX_LENGTH = GRID_WIDTH * GRID_HEIGHT - 1
 # Цвет объекта по умолчанию
 DEFAULT_COLOR: tuple = (255, 255, 255)
 
@@ -48,7 +49,7 @@ clock = pygame.time.Clock()
 class GameObject:
     """Базовый класс."""
 
-    def __init__(self, position=(0, 0), body_color=DEFAULT_COLOR):
+    def __init__(self, position=CENTER_POSITION, body_color=DEFAULT_COLOR):
         """Инициализация игрового объекта."""
         self.position = position
         self.body_color = body_color
@@ -59,11 +60,10 @@ class GameObject:
         pygame.draw.rect(screen, self.body_color, rect)
         pygame.draw.rect(screen, BORDER_COLOR, rect, 1)
 
-    def erase_cell(self, last):
-        """Затирание последнего сегмента."""
-        if last:
-            last_rect = pygame.Rect(last, (GRID_SIZE, GRID_SIZE))
-            pygame.draw.rect(screen, BOARD_BACKGROUND_COLOR, last_rect)
+    def erase_cell(self, position):
+        """Затирание сегмента."""
+        last_rect = pygame.Rect(position, (GRID_SIZE, GRID_SIZE))
+        pygame.draw.rect(screen, BOARD_BACKGROUND_COLOR, last_rect)
 
     def draw(self) -> None:
         """Абстрактный метод."""
@@ -77,7 +77,7 @@ class Snake(GameObject):
 
     def __init__(self) -> None:
         """Инициализация змейки."""
-        super().__init__(position=(0, 0), body_color=SNAKE_COLOR)
+        super().__init__(body_color=SNAKE_COLOR)
         self.reset()
 
     def update_direction(self):
@@ -103,7 +103,8 @@ class Snake(GameObject):
         """Отрисовывает змейку на игровой поверхности."""
         head = self.get_head_position()
         self.draw_cell(head)
-        self.erase_cell(self.last)
+        if self.last:
+            self.erase_cell(self.last)
 
     def get_head_position(self):
         """Возвращает координаты головы змейки."""
@@ -113,7 +114,6 @@ class Snake(GameObject):
         """Перезапуск игры."""
         self.length = 1
         self.speed = SPEED
-        self.position = CENTER_POSITION
         self.positions = [self.position]
         self.last = None
         screen.fill(BOARD_BACKGROUND_COLOR)
@@ -124,16 +124,17 @@ class Snake(GameObject):
 class Apple(GameObject):
     """Дочерний класс, описывающий яблоко и действия с ним."""
 
-    def __init__(self, snake_positions=None):
+    # В случае, если [CENTER_POSITION] вынести в значение
+    # по умолчанию для входного аргумента, то тесты не проходят
+    def __init__(self, taken_positions=None):
         """Инициализация яблока."""
-        super().__init__(position=(0, 0), body_color=APPLE_COLOR)
-        self.randomize_position(snake_positions)
+        super().__init__(body_color=APPLE_COLOR)
+        self.randomize_position(taken_positions or [CENTER_POSITION])
 
-    def randomize_position(self, snake_positions):
+    def randomize_position(self, taken_positions):
         """Устанавливает случайное положение яблока."""
-        snake_positions = snake_positions or [CENTER_POSITION]
-        self.position = snake_positions[0]
-        while self.position in snake_positions:
+        while (self.position in taken_positions
+               and len(taken_positions) < MAX_LENGTH):
             posit_x = randint(0, SCREEN_WIDTH // GRID_SIZE - 1) * GRID_SIZE
             posit_y = randint(0, SCREEN_HEIGHT // GRID_SIZE - 1) * GRID_SIZE
             self.position = (posit_x, posit_y)
@@ -166,7 +167,7 @@ def main() -> None:
     pygame.init()
     # Экземпляры классов.
     snake = Snake()
-    apple = Apple(snake.position)
+    apple = Apple(snake.positions)
     # Основную логику игры.
     apple.draw()
     while True:
