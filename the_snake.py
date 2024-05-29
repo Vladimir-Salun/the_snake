@@ -126,15 +126,14 @@ class Apple(GameObject):
 
     # В случае, если [CENTER_POSITION] вынести в значение
     # по умолчанию для входного аргумента, то тесты не проходят
-    def __init__(self, taken_positions=None):
+    def __init__(self):
         """Инициализация яблока."""
         super().__init__(body_color=APPLE_COLOR)
-        self.randomize_position(taken_positions or [CENTER_POSITION])
+        self.randomize_position([CENTER_POSITION])
 
-    def randomize_position(self, taken_positions):
+    def randomize_position(self, taken_positions=[CENTER_POSITION]):
         """Устанавливает случайное положение яблока."""
-        while (self.position in taken_positions
-               and len(taken_positions) < MAX_LENGTH):
+        while (self.position in taken_positions):
             posit_x = randint(0, SCREEN_WIDTH // GRID_SIZE - 1) * GRID_SIZE
             posit_y = randint(0, SCREEN_HEIGHT // GRID_SIZE - 1) * GRID_SIZE
             self.position = (posit_x, posit_y)
@@ -167,7 +166,7 @@ def main() -> None:
     pygame.init()
     # Экземпляры классов.
     snake = Snake()
-    apple = Apple(snake.positions)
+    apple = Apple()
     # Основную логику игры.
     apple.draw()
     while True:
@@ -180,7 +179,8 @@ def main() -> None:
             snake.length += 1
             apple.randomize_position(snake.positions)
             apple.draw()
-        if snake.get_head_position() in snake.positions[1:]:
+        if (snake.get_head_position() in snake.positions[1:]
+                or len(snake.positions) == MAX_LENGTH):
             snake.reset()
             apple.randomize_position(snake.positions)
             apple.draw()
